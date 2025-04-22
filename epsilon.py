@@ -146,7 +146,9 @@ if __name__ == "__main__":
             name="Mode Simple avec Invincibilité",
             dual_weights=True
         )
-    elif mode == "manual":
+    elif mode == "manualsimple":
+        play_manually(run_game_function=run_game_simple)
+    elif mode == "manualcomplexe":
         play_manually(run_game_function=run_game_complexe)
     else:
         print("Mode inconnu. Utilise 'simple', 'complexe', 'powerup', 'manual' ou 'simple3Invincibilite'")

@@ -119,8 +119,6 @@ if __name__ == "__main__":
             name="Mode PowerUP",
             dual_weights=True
         )
-    elif mode == "manual":
-        play_manually(run_game_function=run_game_complexe)
     elif mode == "complexebonus":
         train(run_game_function=run_game_complexe_bonus, weight_size=10, batch_size=5, generations=10000, epsilon=1, epsilon_decay=0.9999, name="Mode Complexe Bonus")
     elif mode == "complexebonusseconddegre":

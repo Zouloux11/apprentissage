@@ -7,9 +7,9 @@ import matplotlib.pyplot as plt
 # --- Constantes ---
 SCREEN_WIDTH = 400
 SCREEN_HEIGHT = 600
-GRAVITY = 0.3
+GRAVITY = 0.5
  
-JUMP_STRENGTH = -8
+JUMP_STRENGTH = -6
 PIPE_WIDTH = 50
 PIPE_GAP = 0
 PIPE_SPEED = 0

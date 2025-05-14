@@ -155,3 +155,17 @@ def run_game(weights=None, render=False, manual=False):
             break
 
     return score * 1000 + alive_distance
+
+
+if __name__ == "__main__":
+    import json
+
+    if len(sys.argv) < 2:
+        sys.exit(1)
+
+    with open(sys.argv[1], 'r') as f:
+        weights = json.load(f)
+
+    score = run_game(weights=weights, render=True, manual=False)
+
+    print("Score final :", score)

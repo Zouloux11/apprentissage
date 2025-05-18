@@ -4,7 +4,7 @@ import sys
 import math
 import matplotlib.pyplot as plt
 
-from jeuSimple import run_game as run_game_simple
+from jeuClassique import run_game as run_game_simple
 from jeuComplexe import run_game_complexe
 from jeuPowerUP import run_game_powerUP
 

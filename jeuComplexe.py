@@ -23,11 +23,6 @@ PIPE_MOVE_SPEED = 0.03
 PIPE_MAX_OFFSET = 80
 
 
-pygame.init()
-screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-clock = pygame.time.Clock()
-font = pygame.font.SysFont(None, 36)
-
 class Bird:
     def __init__(self):
         self.x = 50
@@ -122,11 +117,10 @@ def run_game_complexe(weights=None, render=False, manual=False):
     while True:
         if render:
             screen.fill((135, 206, 250))
-
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
 
         wind = random.uniform(-WIND_STRENGTH, WIND_STRENGTH)
         if manual:
@@ -178,3 +172,22 @@ def run_game_complexe(weights=None, render=False, manual=False):
             break
 
     return score * 1000 + alive_distance
+
+if __name__ == "__main__":
+    pygame.init()
+    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+    clock = pygame.time.Clock()
+    font = pygame.font.SysFont(None, 36)
+
+    import json
+
+    if len(sys.argv) < 2:
+        sys.exit(1)
+
+    with open(sys.argv[1], 'r') as f:
+        weights = json.load(f)
+        print(weights[3])
+
+    score = run_game_complexe(weights=weights, render=True, manual=False)
+
+    print("Score final :", score)

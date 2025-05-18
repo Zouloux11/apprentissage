@@ -19,19 +19,15 @@ FPS = 60
 NUM_PIPES = 3
 WIND_STRENGTH = 0.2
 GRACE_PERIOD = 0
-PIPE_MOVE_AMPLITUDE = 30
-PIPE_MOVE_SPEED = 0.03
-PIPE_MAX_OFFSET = 80
-POWERUP_DURATION = 150
+PIPE_MOVE_AMPLITUDE = 0
+PIPE_MOVE_SPEED = 0
+PIPE_MAX_OFFSET = 0
+POWERUP_DURATION = 25
 PROBA_POWER_UP= 500
-POWERUP_SCORE_MULTIPLIER = 10
-SURVIVAL_BONUS = 10000
+POWERUP_SCORE_MULTIPLIER = 100
+SURVIVAL_BONUS = 1000
 
-pygame.init()
-screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-clock = pygame.time.Clock()
-font = pygame.font.SysFont(None, 36)
-small_font = pygame.font.SysFont(None, 24)
+
 
 class PowerUp:
     def __init__(self, x):
@@ -130,22 +126,29 @@ def should_jump_complexe(bird, pipes, weights_jump, weights_powerup, wind=0, pow
             dx_powerup = dx
             dy_powerup = p.y - bird.y
 
-    common_inputs = [
+    jump_inputs = [
         bird.y - next_pipe.height,
         bird.y - (next_pipe.height + PIPE_GAP),
         next_pipe.x - bird.x,
         bird.velocity,
         bird.y,
-        math.sin(next_pipe.osc_y) * PIPE_MOVE_AMPLITUDE,
-        math.cos(next_pipe.osc_x) * 5,
-        wind,
+        dx_powerup,
+        dy_powerup
+    ]
+
+    power_up_inputs = [
+        bird.y - next_pipe.height,
+        bird.y - (next_pipe.height + PIPE_GAP),
+        next_pipe.x - bird.x,
+        bird.velocity,
+        bird.y,
         dx_powerup,
         dy_powerup
     ]
 
     # Calcul des décisions indépendantes
-    jump_decision_value = sum(w * i for w, i in zip(weights_jump, common_inputs))
-    powerup_decision_value = sum(w * i for w, i in zip(weights_powerup, common_inputs))
+    jump_decision_value = sum(w * i for w, i in zip(weights_jump, jump_inputs))
+    powerup_decision_value = sum(w * i for w, i in zip(weights_powerup, power_up_inputs))
 
     jump = jump_decision_value < 0
     use_powerup = powerup_decision_value < 0
@@ -173,11 +176,10 @@ def run_game_powerUP(weightsJump=None, weightsPowerUp=None, render=False, manual
     while True:
         if render:
             screen.fill((135, 206, 250))
-
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
 
         wind = random.uniform(-WIND_STRENGTH, WIND_STRENGTH)
 
@@ -291,6 +293,33 @@ def run_game_powerUP(weightsJump=None, weightsPowerUp=None, render=False, manual
         if frame > 30000:
             break
 
-    # Calculate final score
-    total_score = score + distance_points
-    return total_score
+    return score + distance_points
+
+
+if __name__ == "__main__":
+    import pygame
+    import sys
+    import json
+
+    pygame.init()
+    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+    clock = pygame.time.Clock()
+    font = pygame.font.SysFont(None, 36)
+    small_font = pygame.font.SysFont(None, 24)
+
+    if len(sys.argv) < 2:
+        print("Usage: python jeuPowerUP.py weights.json")
+        sys.exit(1)
+
+    with open(sys.argv[1], 'r') as f:
+        loaded_weights = json.load(f)
+
+    if not isinstance(loaded_weights, list) or len(loaded_weights) != 2:
+        print("Erreur : le fichier JSON doit contenir une liste avec deux sous-listes de poids.")
+        sys.exit(1)
+
+    weights_jump, weights_powerup = loaded_weights
+
+    score = run_game_powerUP(weightsJump=weights_jump, weightsPowerUp=weights_powerup, render=True, manual=False)
+
+    print("Score final :", score)

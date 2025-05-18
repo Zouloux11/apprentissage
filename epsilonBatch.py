@@ -4,10 +4,10 @@ import sys
 import math
 import matplotlib.pyplot as plt
 
-from jeuSimple import run_game as run_game_simple
+from jeuClassique import run_game as run_game_simple
 from jeuComplexe import run_game_complexe
 from jeuPowerUP import run_game_powerUP
-from jeuComplexeBonus import run_game_complexe as run_game_complexe_bonus
+from jeuClassiqueBonus import run_game_complexe as run_game_complexe_bonus
 from jeuComplexeBonusSecondDegre import run_game_complexe as run_game_complexe_bonus_second_degre
 from jeuComplexeBonusQuadratique import run_game_complexe as run_game_complexe_bonus_quadratique
 

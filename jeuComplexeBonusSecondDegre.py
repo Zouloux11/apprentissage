@@ -19,17 +19,13 @@ FPS = 60
 NUM_PIPES = 3
 WIND_STRENGTH = 0.2
 GRACE_PERIOD = 0
-PIPE_MOVE_AMPLITUDE = 30
+PIPE_MOVE_AMPLITUDE =30
 PIPE_MOVE_SPEED = 0.03
 PIPE_MAX_OFFSET = 80
 BONUS_APPEAR_INTERVAL = 100
 BONUS_RADIUS = 10
 BONUS_SCORE = 5000
 
-pygame.init()
-screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-clock = pygame.time.Clock()
-font = pygame.font.SysFont(None, 36)
 
 class Bird:
     def __init__(self):
@@ -81,7 +77,7 @@ class Bonus:
     def get_rect(self):
         return pygame.Rect(self.x - BONUS_RADIUS, self.y - BONUS_RADIUS, BONUS_RADIUS * 2, BONUS_RADIUS * 2)
 
-def should_jump_complexe(bird, pipes, weights, wind=0, bonus=None):
+def should_jump_complexe(bird, pipes, weights, bonus, wind=0):
     min_dist = float('inf')
     next_pipe = None
     for pipe in pipes:
@@ -127,21 +123,17 @@ def should_jump_complexe(bird, pipes, weights, wind=0, bonus=None):
             dy_bonus = closest_bonus.y - bird.y
 
 
-    # Entrées originales
     inputs = [dy_top, dy_bottom, dx, v, altitude, pipe_movement_y, pipe_movement_x, wind, dx_bonus, dy_bonus]
     
-    # Ajout des carrés des entrées
     inputs_squared = [i**2 for i in inputs]
     
-    # Vecteur final d'entrée = concat des originaux + carrés
     full_inputs = inputs + inputs_squared
 
-    # Application des poids
     decision = sum(w * i for w, i in zip(weights, full_inputs))
-    
+
     return decision < 0
 
-def run_game_complexe(weights=None, render=False, manual=False):
+def run_game_complexe_bonus(weights=None, render=False, manual=False):
     global PIPE_GAP, PIPE_SPEED, PIPE_GAP_INIT, PIPE_SPEED_INIT, frame
     bird = Bird()
     pipes = [Pipe(SCREEN_WIDTH + i * 300) for i in range(NUM_PIPES)]
@@ -159,13 +151,11 @@ def run_game_complexe(weights=None, render=False, manual=False):
     while True:
         if render:
             screen.fill((135, 206, 250))
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
 
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-
-        # Gestion du bonus
         if frame % BONUS_APPEAR_INTERVAL == 0:
             bonuses.append(Bonus())
 
@@ -177,13 +167,14 @@ def run_game_complexe(weights=None, render=False, manual=False):
             if keys[pygame.K_SPACE]:
                 bird.jump()
         else:
-            if should_jump_complexe(bird, pipes, weights, wind=wind, bonus=bonuses):
+            if should_jump_complexe(bird, pipes, weights, bonuses, wind=wind):
                 bird.jump()
 
         bird.velocity += GRAVITY + wind
         bird.update()
         for pipe in pipes:
             pipe.update()
+
         for b in bonuses:
             b.update()
 
@@ -203,12 +194,15 @@ def run_game_complexe(weights=None, render=False, manual=False):
         bird_rect = bird.get_rect()
         collision = bird.y > SCREEN_HEIGHT or bird.y < 0 or any(pipe.collides_with(bird_rect) for pipe in pipes)
 
+
         bonuses = [b for b in bonuses if b.x + BONUS_RADIUS > 0 and not b.collected]
 
         for b in bonuses:
             if bird_rect.colliderect(b.get_rect()):
                 score += BONUS_SCORE // 1000
                 b.collected = True
+
+
 
 
         alive_distance += 1
@@ -237,3 +231,23 @@ def run_game_complexe(weights=None, render=False, manual=False):
             break
 
     return score * 1000 + alive_distance
+
+
+if __name__ == "__main__":
+    pygame.init()
+    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+    clock = pygame.time.Clock()
+    font = pygame.font.SysFont(None, 36)
+
+    import json
+
+    if len(sys.argv) < 2:
+        sys.exit(1)
+
+    with open(sys.argv[1], 'r') as f:
+        weights = json.load(f)
+
+    score = run_game_complexe_bonus(weights=weights, render=True, manual=False)
+
+    print("Score final :", score)
+

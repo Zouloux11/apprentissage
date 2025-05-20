@@ -77,7 +77,7 @@ class Bonus:
     def get_rect(self):
         return pygame.Rect(self.x - BONUS_RADIUS, self.y - BONUS_RADIUS, BONUS_RADIUS * 2, BONUS_RADIUS * 2)
 
-def should_jump_complexe(bird, pipes, weights, bonus, wind=0):
+def should_jump_complexe(bird, pipes, weights, bonus):
     min_dist = float('inf')
     next_pipe = None
     for pipe in pipes:
@@ -175,7 +175,7 @@ def run_game_classique_bonus(weights=None, render=False, manual=False):
             if pipe.x + PIPE_WIDTH < 0:
                 pipes.remove(pipe)
                 pipes.append(Pipe(300 * NUM_PIPES - PIPE_WIDTH)) 
-                score += 1
+                #score += 1
                 pipe_count += 1
                 if pipe_count % 5 == 0:
                     if PIPE_GAP > 60:

@@ -77,7 +77,7 @@ class Bonus:
     def get_rect(self):
         return pygame.Rect(self.x - BONUS_RADIUS, self.y - BONUS_RADIUS, BONUS_RADIUS * 2, BONUS_RADIUS * 2)
 
-def should_jump_complexe(bird, pipes, weights, bonus, wind=0):
+def should_jump_complexe(bird, pipes, weights, bonus):
     min_dist = float('inf')
     next_pipe = None
     for pipe in pipes:
@@ -125,7 +125,8 @@ def should_jump_complexe(bird, pipes, weights, bonus, wind=0):
 
     if dy_bonus == 0 :
         dy_bonus = 1
-    inputs = [dy_top, dy_bottom, dx, v, altitude, 10000*((1/dx_bonus)*(1/dx_bonus)), 10000*((1/dy_bonus)*(1/dy_bonus))]
+        
+    inputs = [dy_top, dy_bottom, dx, v, altitude, dx_bonus, dy_bonus]
     
     inputs_squared = [i**2 for i in inputs]
     

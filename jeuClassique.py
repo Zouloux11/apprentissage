@@ -93,6 +93,8 @@ def run_game(weights=None, render=False, manual=False):
     PIPE_SPEED = PIPE_SPEED_INIT
     PIPE_GAP = PIPE_GAP_INIT
 
+    video_frames = []  # <--- collect frames for video if render=True
+
     while True:
         if render:
             screen.fill((135, 206, 250))
@@ -127,7 +129,10 @@ def run_game(weights=None, render=False, manual=False):
                         PIPE_SPEED += 0.5
 
         bird_rect = bird.get_rect()
-        collision = bird.y > SCREEN_HEIGHT or bird.y < 0 or any(pipe.collides_with(bird_rect) for pipe in pipes)
+        collision = (
+            bird.y > SCREEN_HEIGHT or bird.y < 0 or
+            any(pipe.collides_with(bird_rect) for pipe in pipes)
+        )
 
         alive_distance += 1
 
@@ -136,9 +141,16 @@ def run_game(weights=None, render=False, manual=False):
             for pipe in pipes:
                 pygame.draw.rect(screen, (0, 255, 0), pygame.Rect(pipe.x, 0, PIPE_WIDTH, pipe.height))
                 pygame.draw.rect(screen, (0, 255, 0), pygame.Rect(pipe.x, pipe.height + PIPE_GAP, PIPE_WIDTH, SCREEN_HEIGHT))
+
             score_text = font.render(f"Score: {score}", True, (0, 0, 0))
             screen.blit(score_text, (10, 10))
             pygame.display.flip()
+
+            # Capture current frame for video
+            frame_data = pygame.surfarray.array3d(screen)
+            frame_data = frame_data.swapaxes(0, 1)  # (width, height, 3) → (height, width, 3)
+            video_frames.append(frame_data)
+
             clock.tick(FPS)
 
         if collision:
@@ -148,7 +160,13 @@ def run_game(weights=None, render=False, manual=False):
         if frame > 30000:
             break
 
+    # Save video if needed
+    if render and video_frames:
+        import imageio
+        imageio.mimsave('gameplay.mp4', video_frames, fps=FPS)
+
     return score * 1000 + alive_distance
+
 
 if __name__ == "__main__":
     pygame.init()
@@ -167,3 +185,4 @@ if __name__ == "__main__":
     score = run_game(weights=weights, render=True, manual=False)
 
     print("Score final :", score)
+

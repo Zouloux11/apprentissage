@@ -170,7 +170,7 @@ def run_game_classique_bonus(weights=None, render=False, manual=False):
             if keys[pygame.K_SPACE]:
                 bird.jump()
         else:
-            if should_jump_complexe(bird, pipes, weights, bonuses, wind=wind):
+            if should_jump_complexe(bird, pipes, weights, bonuses):
                 bird.jump()
 
         bird.velocity += GRAVITY + wind

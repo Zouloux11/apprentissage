@@ -3,6 +3,10 @@ import random
 import sys
 import math
 import matplotlib.pyplot as plt
+import sys
+import random
+import os
+from moviepy.video.io.ImageSequenceClip import ImageSequenceClip
 
 # --- Constantes ---
 SCREEN_WIDTH = 400
@@ -127,6 +131,7 @@ def should_jump_complexe(bird, pipes, weights, bonus):
 
 def run_game_classique_bonus(weights=None, render=False, manual=False):
     global PIPE_GAP, PIPE_SPEED, PIPE_GAP_INIT, PIPE_SPEED_INIT, frame
+
     bird = Bird()
     pipes = [Pipe(SCREEN_WIDTH + i * 300) for i in range(NUM_PIPES)]
     score = 0
@@ -136,9 +141,11 @@ def run_game_classique_bonus(weights=None, render=False, manual=False):
     wind = 0
     bonuses = []
 
-
     PIPE_SPEED = PIPE_SPEED_INIT
     PIPE_GAP = PIPE_GAP_INIT
+
+    frame_files = []
+    os.makedirs("frames", exist_ok=True)
 
     while True:
         if render:
@@ -151,7 +158,6 @@ def run_game_classique_bonus(weights=None, render=False, manual=False):
         if frame % BONUS_APPEAR_INTERVAL == 0:
             bonuses.append(Bonus())
 
-
         wind = random.uniform(-WIND_STRENGTH, WIND_STRENGTH)
 
         if manual:
@@ -159,33 +165,32 @@ def run_game_classique_bonus(weights=None, render=False, manual=False):
             if keys[pygame.K_SPACE]:
                 bird.jump()
         else:
-            if should_jump_complexe(bird, pipes, weights, bonuses, wind=wind):
+            if should_jump_complexe(bird, pipes, weights, bonuses):
                 bird.jump()
 
         bird.velocity += GRAVITY + wind
         bird.update()
         for pipe in pipes:
             pipe.update()
-
         for b in bonuses:
             b.update()
-
 
         for pipe in pipes:
             if pipe.x + PIPE_WIDTH < 0:
                 pipes.remove(pipe)
-                pipes.append(Pipe(300 * NUM_PIPES - PIPE_WIDTH)) 
-                #score += 1
+                pipes.append(Pipe(300 * NUM_PIPES - PIPE_WIDTH))
                 pipe_count += 1
                 if pipe_count % 5 == 0:
                     if PIPE_GAP > 60:
-                        PIPE_GAP -= 10 
-                    if PIPE_SPEED < 10: 
+                        PIPE_GAP -= 10
+                    if PIPE_SPEED < 10:
                         PIPE_SPEED += 0.5
 
         bird_rect = bird.get_rect()
-        collision = bird.y > SCREEN_HEIGHT or bird.y < 0 or any(pipe.collides_with(bird_rect) for pipe in pipes)
-
+        collision = (
+            bird.y > SCREEN_HEIGHT or bird.y < 0 or
+            any(pipe.collides_with(bird_rect) for pipe in pipes)
+        )
 
         bonuses = [b for b in bonuses if b.x + BONUS_RADIUS > 0 and not b.collected]
 
@@ -193,9 +198,6 @@ def run_game_classique_bonus(weights=None, render=False, manual=False):
             if bird_rect.colliderect(b.get_rect()):
                 score += BONUS_SCORE // 1000
                 b.collected = True
-
-
-
 
         alive_distance += 1
 
@@ -209,20 +211,33 @@ def run_game_classique_bonus(weights=None, render=False, manual=False):
                 if not b.collected:
                     pygame.draw.circle(screen, (255, 0, 255), (int(b.x), int(b.y)), BONUS_RADIUS)
 
-
             score_text = font.render(f"Score: {score}", True, (0, 0, 0))
             screen.blit(score_text, (10, 10))
             pygame.display.flip()
             clock.tick(FPS)
 
-        if collision:
+            frame_path = f"frames/frame_{frame:05d}.png"
+            pygame.image.save(screen, frame_path)
+            frame_files.append(frame_path)
+
+        if collision or frame > 30000:
             break
 
         frame += 1
-        if frame > 30000:
-            break
+
+    # Create video after game ends
+    if render and frame_files:
+        print("Creating video...")
+        clip = ImageSequenceClip(frame_files, fps=FPS)
+        clip.write_videofile("output.mp4", codec="libx264")
+
+        # Optional: delete frames
+        for f in frame_files:
+            os.remove(f)
+        os.rmdir("frames")
 
     return score * 1000 + alive_distance
+
 
 
 if __name__ == "__main__":

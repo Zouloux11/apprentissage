@@ -1,8 +1,13 @@
+import json
+import imageio
 import pygame
 import random
 import sys
 import math
 import matplotlib.pyplot as plt
+import os
+from moviepy.video.io.ImageSequenceClip import ImageSequenceClip
+import numpy as np
 
 # --- Constantes ---
 SCREEN_WIDTH = 400
@@ -23,7 +28,7 @@ PIPE_MOVE_AMPLITUDE = 0
 PIPE_MOVE_SPEED = 0
 PIPE_MAX_OFFSET = 0
 POWERUP_DURATION = 25
-PROBA_POWER_UP= 500
+PROBA_POWER_UP= 150
 POWERUP_SCORE_MULTIPLIER = 100
 SURVIVAL_BONUS = 1000
 
@@ -48,26 +53,26 @@ class Bird:
         self.y = SCREEN_HEIGHT // 2
         self.velocity = 0
         self.powerups = 0
-        self.invincible = False
+        self.powerUP = False
         self.invincibility_timer = 0
         self.survived_powerup = False 
 
     def update(self):
         self.velocity += GRAVITY
         self.y += self.velocity
-        if self.invincible:
+        if self.powerUP:
             self.invincibility_timer -= 1
             if self.invincibility_timer <= 0:
-                self.invincible = False
+                self.powerUP = False
                 self.survived_powerup = True 
 
     def jump(self):
         self.velocity = JUMP_STRENGTH
 
     def use_powerup(self):
-        if self.powerups > 0 and not self.invincible:
+        if self.powerups > 0 and not self.powerUP:
             self.powerups -= 1
-            self.invincible = True
+            self.powerUP = True
             self.invincibility_timer = POWERUP_DURATION
             self.survived_powerup = False 
 
@@ -146,7 +151,6 @@ def should_jump_complexe(bird, pipes, weights_jump, weights_powerup, wind=0, pow
         dy_powerup
     ]
 
-    # Calcul des décisions indépendantes
     jump_decision_value = sum(w * i for w, i in zip(weights_jump, jump_inputs))
     powerup_decision_value = sum(w * i for w, i in zip(weights_powerup, power_up_inputs))
 
@@ -173,6 +177,9 @@ def run_game_powerUP(weightsJump=None, weightsPowerUp=None, render=False, manual
     PIPE_SPEED = PIPE_SPEED_INIT
     PIPE_GAP = PIPE_GAP_INIT
 
+    if render:
+        video_frames = []
+
     while True:
         if render:
             screen.fill((135, 206, 250))
@@ -183,16 +190,13 @@ def run_game_powerUP(weightsJump=None, weightsPowerUp=None, render=False, manual
 
         wind = random.uniform(-WIND_STRENGTH, WIND_STRENGTH)
 
-        # Spawner des powerups aléatoirement
-        shouldWeSpawnAPowerUp = int(random.uniform(0, PROBA_POWER_UP))
-        if (shouldWeSpawnAPowerUp == 1):
+        if int(random.uniform(0, PROBA_POWER_UP)) == 1:
             powerups.append(PowerUp(SCREEN_WIDTH + 100))
 
         if bird.survived_powerup:
             score += SURVIVAL_BONUS
             survival_bonuses += 1
             bird.survived_powerup = False
-
 
         if manual:
             keys = pygame.key.get_pressed()
@@ -215,22 +219,17 @@ def run_game_powerUP(weightsJump=None, weightsPowerUp=None, render=False, manual
         for p in powerups:
             p.update()
 
-        if bird.invincible:
-            distance_points += POWERUP_SCORE_MULTIPLIER
-        else:
-            distance_points += 1
+        distance_points += 1
 
         for pipe in pipes:
             if pipe.x + PIPE_WIDTH < 0:
                 pipes.remove(pipe)
                 pipes.append(Pipe(300 * NUM_PIPES - PIPE_WIDTH)) 
                 pipes_passed += 1
-                
-                if bird.invincible:
+
+                if bird.powerUP:
                     score += 1000 * POWERUP_SCORE_MULTIPLIER
-                else:
-                    score += 1000
-                
+
                 pipe_count += 1
                 if pipe_count % 5 == 0:
                     if PIPE_GAP > 60:
@@ -250,15 +249,15 @@ def run_game_powerUP(weightsJump=None, weightsPowerUp=None, render=False, manual
             any(pipe.collides_with(bird_rect) for pipe in pipes)
         )
 
-        if bird.invincible:
+        if bird.powerUP:
             collision = False
 
         alive_distance += 1
 
         if render:
             total_score = score + distance_points
-            
-            color = (0, 0, 255) if bird.invincible else (255, 255, 0)
+
+            color = (0, 0, 255) if bird.powerUP else (255, 255, 0)
             pygame.draw.circle(screen, color, (int(bird.x), int(bird.y)), 20)
 
             for pipe in pipes:
@@ -271,19 +270,26 @@ def run_game_powerUP(weightsJump=None, weightsPowerUp=None, render=False, manual
 
             score_text = font.render(f"Score: {total_score}", True, (0, 0, 0))
             screen.blit(score_text, (10, 10))
-            
+
             info_text = font.render(f"Pipes: {pipes_passed} | PowerUps: {bird.powerups}", True, (0, 0, 0))
             screen.blit(info_text, (10, 50))
-            
-            if bird.invincible:
+
+            if bird.powerUP:
                 powerup_status = small_font.render(f"PowerUp Active: x{POWERUP_SCORE_MULTIPLIER} (Time: {bird.invincibility_timer})", True, (0, 0, 255))
                 screen.blit(powerup_status, (10, 90))
-            
+
             if survival_bonuses > 0:
                 survival_info = small_font.render(f"Survival Bonuses: {survival_bonuses} x {SURVIVAL_BONUS}", True, (255, 0, 0))
                 screen.blit(survival_info, (10, 130))
-            
+
             pygame.display.flip()
+
+            # Capture frame for video
+            frame_surface = pygame.display.get_surface()
+            frame_data = pygame.surfarray.array3d(frame_surface)
+            frame_data = np.transpose(frame_data, (1, 0, 2))  # (width, height) to (height, width)
+            video_frames.append(frame_data.copy())
+
             clock.tick(FPS)
 
         if collision:
@@ -293,14 +299,16 @@ def run_game_powerUP(weightsJump=None, weightsPowerUp=None, render=False, manual
         if frame > 30000:
             break
 
-    return score + distance_points
+    total_score = score + distance_points
+
+    if render and video_frames:
+        output_filename = f"gameplay_{total_score}.mp4"
+        imageio.mimsave(output_filename, video_frames, fps=FPS)
+
+    return total_score
 
 
 if __name__ == "__main__":
-    import pygame
-    import sys
-    import json
-
     pygame.init()
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     clock = pygame.time.Clock()
@@ -323,3 +331,4 @@ if __name__ == "__main__":
     score = run_game_powerUP(weightsJump=weights_jump, weightsPowerUp=weights_powerup, render=True, manual=False)
 
     print("Score final :", score)
+

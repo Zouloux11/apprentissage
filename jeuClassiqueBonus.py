@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 import sys
 import random
 import os
-from moviepy.video.io.ImageSequenceClip import ImageSequenceClip
 
 # --- Constantes ---
 SCREEN_WIDTH = 400
@@ -216,25 +215,13 @@ def run_game_classique_bonus(weights=None, render=False, manual=False):
             pygame.display.flip()
             clock.tick(FPS)
 
-            frame_path = f"frames/frame_{frame:05d}.png"
-            pygame.image.save(screen, frame_path)
-            frame_files.append(frame_path)
 
         if collision or frame > 30000:
             break
 
         frame += 1
 
-    # Create video after game ends
-    if render and frame_files:
-        print("Creating video...")
-        clip = ImageSequenceClip(frame_files, fps=FPS)
-        clip.write_videofile("output.mp4", codec="libx264")
 
-        # Optional: delete frames
-        for f in frame_files:
-            os.remove(f)
-        os.rmdir("frames")
 
     return score * 1000 + alive_distance
 

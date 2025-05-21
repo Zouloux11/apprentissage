@@ -3,8 +3,6 @@ import random
 import sys
 import math
 import matplotlib.pyplot as plt
-import os
-from moviepy.video.io.ImageSequenceClip import ImageSequenceClip
 
 # --- Constantes ---
 SCREEN_WIDTH = 400
@@ -166,11 +164,6 @@ def run_game_complexe(weights=None, render=False, manual=False):
             screen.blit(score_text, (10, 10))
             pygame.display.flip()
 
-            # Capture frame for video
-            frame_data = pygame.surfarray.array3d(screen)
-            frame_data = frame_data.swapaxes(0, 1)  # convert from (width, height, 3) to (height, width, 3)
-            video_frames.append(frame_data)
-
             clock.tick(FPS)
 
         if collision:
@@ -180,10 +173,6 @@ def run_game_complexe(weights=None, render=False, manual=False):
         if frame > 30000:
             break
 
-    # Save video if frames were collected
-    if render and video_frames:
-        import imageio
-        imageio.mimsave('gameplay.mp4', video_frames, fps=FPS)
 
     return score * 1000 + alive_distance
 

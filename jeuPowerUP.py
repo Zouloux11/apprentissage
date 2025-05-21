@@ -1,12 +1,10 @@
 import json
-import imageio
 import pygame
 import random
 import sys
 import math
 import matplotlib.pyplot as plt
 import os
-from moviepy.video.io.ImageSequenceClip import ImageSequenceClip
 import numpy as np
 
 # --- Constantes ---
@@ -284,12 +282,6 @@ def run_game_powerUP(weightsJump=None, weightsPowerUp=None, render=False, manual
 
             pygame.display.flip()
 
-            # Capture frame for video
-            frame_surface = pygame.display.get_surface()
-            frame_data = pygame.surfarray.array3d(frame_surface)
-            frame_data = np.transpose(frame_data, (1, 0, 2))  # (width, height) to (height, width)
-            video_frames.append(frame_data.copy())
-
             clock.tick(FPS)
 
         if collision:
@@ -300,10 +292,6 @@ def run_game_powerUP(weightsJump=None, weightsPowerUp=None, render=False, manual
             break
 
     total_score = score + distance_points
-
-    if render and video_frames:
-        output_filename = f"gameplay_{total_score}.mp4"
-        imageio.mimsave(output_filename, video_frames, fps=FPS)
 
     return total_score
 

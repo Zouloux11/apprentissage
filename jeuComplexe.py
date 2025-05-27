@@ -4,7 +4,6 @@ import sys
 import math
 import matplotlib.pyplot as plt
 
-# --- Constantes ---
 SCREEN_WIDTH = 400
 SCREEN_HEIGHT = 600
 GRAVITY = 0.3
@@ -113,7 +112,6 @@ def run_game_complexe(weights=None, render=False, manual=False):
     PIPE_SPEED = PIPE_SPEED_INIT
     PIPE_GAP = PIPE_GAP_INIT
 
-    video_frames = []  # <--- collect frames if render=True
 
     while True:
         if render:

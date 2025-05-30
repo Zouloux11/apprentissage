@@ -48,14 +48,14 @@ Pipes regularly appear from the right and move toward the bird.
 
 At each frame, the agent can choose to either jump or do nothing. However, the power of the jump is fixed : we cannot control how strong the jump is.
 
-The difficulty increases every 5 pipes passed, making the game progressively harder as the player advances.
+*The difficulty increases every 5 pipes passed*, making the game progressively harder as the player advances.
 
 The objective is to survive as long as possible by avoiding collisions with pipes, as well as the top and bottom edges of the screen.
 
 
 == Comparison baselines
 
-There are no standardized benchmarks, we could use:
+There are *no standardized benchmarks*, we could use:
 
 - A random policy (jump with 50% probability)
 
